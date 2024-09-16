@@ -486,12 +486,15 @@ var FittsTestUI = /** @class */ (function (_super) {
                 this.theReticle.visible = false;
                 // a bit more left to do...
                 // === YOUR CODE HERE ===
+                //target is not needed in the beginning state
                 this.theTarget.visible = false;
                 break;
             case 'begin_trial':
                 // === YOUR CODE HERE ===
+                //reticle is visible at the beginning of the trial and target is not
                 this.theReticle.visible = true;
                 this.theTarget.visible = false;
+                //rewrite the background text
                 this.theBackground.visible = true;
                 this.theBackground.msg1 = "Trial #" + this.trialCount + " of " + this.MAX_TRIALS;
                 this.theBackground.msg2 = "";
@@ -499,14 +502,17 @@ var FittsTestUI = /** @class */ (function (_super) {
                 break;
             case 'in_trial':
                 // === YOUR CODE HERE ===
+                //target should be visible in the trial and the reticle and the background should not
                 this.theReticle.visible = false;
                 this.theTarget.visible = true;
                 this.theBackground.visible = false;
                 break;
             case 'ended':
                 // === YOUR CODE HERE ===
+                //everything should be gone except the background text
                 this.theReticle.visible = false;
                 this.theTarget.visible = false;
+                //rewrite the background text
                 this.theBackground.visible = true;
                 this.theBackground.msg1 = "Done! Refresh the page to start again.";
                 // produce a dump of our data records on the console
@@ -530,8 +536,10 @@ var FittsTestUI = /** @class */ (function (_super) {
             // make new random locations for reticle and target 
             var _a = pickLocationsAndSize(this.canvas.width, this.canvas.height), retX = _a.retX, retY = _a.retY, targX = _a.targX, targY = _a.targY, targDiam = _a.targD;
             // === YOUR CODE HERE ===
+            //set new randomly generated locations for target and reticle
             this.theTarget.newGeom(targX, targY, targDiam);
             this.theReticle.newGeom(retX, retY);
+            //changes the state to start the trial
             this.configure('begin_trial');
             this.needsRedraw = true;
             this.redraw();
@@ -620,6 +628,7 @@ var Target = /** @class */ (function (_super) {
     // If the diameter is supplied, both the width and height are set to that value.
     Target.prototype.newGeom = function (newCentX, newCentY, newDiam) {
         // === YOUR CODE HERE ===
+        //sets the new properties of the object
         this.centerX = newCentX;
         this.centerY = newCentY;
         if (newDiam) {
@@ -636,7 +645,7 @@ var Target = /** @class */ (function (_super) {
     // Draw the object as a filled and outlined circle
     Target.prototype.draw = function (ctx) {
         // === YOUR CODE HERE ===
-        if (this.visible) {
+        if (this.visible) { //only draw if the object is set to be visible
             ctx.beginPath();
             ctx.arc(this.centerX, this.centerY, this.diam / 2, 0, Math.PI * 2, true);
             ctx.fillStyle = this.color;
@@ -649,9 +658,10 @@ var Target = /** @class */ (function (_super) {
     Target.prototype.pickedBy = function (ptX, ptY) {
         // === YOUR CODE HERE ===
         if (!this.visible)
-            return false;
+            return false; //if not visible we don't need to check
+        //check distance from point to center of the target
         var dist = Math.sqrt(Math.pow((ptX - this.centerX), 2) + Math.pow((ptY - this.centerY), 2));
-        return dist <= this.radius;
+        return dist <= this.radius; //true if point in the circle
         // === REMOVE THE FOLLOWING CODE (which is here so the skeleton code compiles) ===
         // return false;
         // === END OF CODE TO BE REMOVED ===
@@ -662,7 +672,9 @@ var Target = /** @class */ (function (_super) {
     // and starting a new one.
     Target.prototype.handleClickAt = function (ptX, ptY) {
         // === YOUR CODE HERE ===
+        //if state is correct, the target is visible, and the point is in bounds
         if (this.parentUI.currentState === 'in_trial' && this.visible && this.pickedBy(ptX, ptY)) {
+            //end the trial
             this.parentUI.recordTrialEnd(ptX, ptY, this.diam);
             this.parentUI.newTrial();
             return true;
@@ -702,7 +714,8 @@ var Reticle = /** @class */ (function (_super) {
     // circle that indicates the active clickable region of the object.
     Reticle.prototype.draw = function (ctx) {
         // === YOUR CODE HERE ===\
-        if (this.visible) {
+        if (this.visible) { //only draw if visible
+            //draws the reticle
             ctx.beginPath();
             ctx.arc(this.centerX, this.centerY, Reticle.RETICLE_DIAM / 2, 0, 2 * Math.PI);
             ctx.lineTo(this.centerX - Reticle.RETICLE_DIAM / 2, this.centerY);
@@ -720,10 +733,10 @@ var Reticle = /** @class */ (function (_super) {
     Reticle.prototype.pickedBy = function (ptX, ptY) {
         // === YOUR CODE HERE ===
         if (!this.visible)
-            return false;
+            return false; //only check if reticle is visible
+        //gets distance from point to center of reticle
         var dist = Math.sqrt(Math.pow((ptX - this.centerX), 2) + Math.pow((ptY - this.centerY), 2));
-        console.log(dist <= Reticle.RETICLE_INNER_DIAM / 2);
-        return dist <= Reticle.RETICLE_INNER_DIAM / 2;
+        return dist <= Reticle.RETICLE_INNER_DIAM / 2; //true if point in inner circle
         // === REMOVE THE FOLLOWING CODE (which is here so the skeleton code compiles) ===
         // return false;
         // === END OF CODE TO BE REMOVED ===
@@ -734,7 +747,9 @@ var Reticle = /** @class */ (function (_super) {
     // by starting the trial timer and moving to the 'in_trial' state.
     Reticle.prototype.handleClickAt = function (ptX, ptY) {
         // === YOUR CODE HERE ===
+        //if state is correct, reticle is visible, and point is in the inner circle of reticle
         if (this.parentUI.currentState === 'begin_trial' && this.visible && this.pickedBy(ptX, ptY)) {
+            //start the trail
             this.parentUI.startTrial(ptX, ptY);
             this.parentUI.configure('in_trial');
             this.parentUI.needsRedraw = true;
@@ -812,6 +827,7 @@ var BackgroundDisplay = /** @class */ (function (_super) {
         var ypos = 20 + fontHeight;
         var xpos = 10;
         // === YOUR CODE HERE ===
+        //writes the text
         ctx.fillText(this._msg1, xpos + leading, ypos);
         ctx.fillText(this._msg2, xpos, ypos + fontHeight);
         ctx.fillText(this._msg3, xpos, ypos + 2 * fontHeight);
@@ -821,6 +837,7 @@ var BackgroundDisplay = /** @class */ (function (_super) {
     // in which case we respond to this input by starting a new trial
     BackgroundDisplay.prototype.handleClickAt = function (ptX, ptY) {
         // === YOUR CODE HERE ===
+        //if state is correct, clicking anywhere starts the new trial
         if (this.parentUI.currentState === 'start') {
             this.parentUI.newTrial();
             return true;
