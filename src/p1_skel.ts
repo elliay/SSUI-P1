@@ -509,6 +509,7 @@ class FittsTestUI extends UIClass {
 
                 // a bit more left to do...
                 // === YOUR CODE HERE ===
+                //target is not needed in the beginning state
                 this.theTarget.visible = false;
                 
 
@@ -517,8 +518,10 @@ class FittsTestUI extends UIClass {
             case 'begin_trial':
                 
                 // === YOUR CODE HERE ===
+                //reticle is visible at the beginning of the trial and target is not
                 this.theReticle.visible = true;
                 this.theTarget.visible = false;
+                //rewrite the background text
                 this.theBackground.visible = true;
                 this.theBackground.msg1 = "Trial #" + this.trialCount + " of " + this.MAX_TRIALS;
                 this.theBackground.msg2 = "";
@@ -528,6 +531,7 @@ class FittsTestUI extends UIClass {
             case 'in_trial':
                 
                 // === YOUR CODE HERE ===
+                //target should be visible in the trial and the reticle and the background should not
                 this.theReticle.visible = false;
                 this.theTarget.visible = true;
                 this.theBackground.visible = false;
@@ -537,8 +541,10 @@ class FittsTestUI extends UIClass {
             case 'ended':
                 
                 // === YOUR CODE HERE ===
+                //everything should be gone except the background text
                 this.theReticle.visible = false;
                 this.theTarget.visible = false;
+                //rewrite the background text
                 this.theBackground.visible = true;
                 this.theBackground.msg1 = "Done! Refresh the page to start again.";
 
@@ -573,8 +579,10 @@ class FittsTestUI extends UIClass {
                 pickLocationsAndSize(this.canvas.width,this.canvas.height);
 
             // === YOUR CODE HERE ===
+            //set new randomly generated locations for target and reticle
             this.theTarget.newGeom(targX, targY, targDiam);
             this.theReticle.newGeom(retX, retY);
+            //changes the state to start the trial
             this.configure('begin_trial');
             this.needsRedraw = true;
             this.redraw();
@@ -665,6 +673,7 @@ class Target extends ScreenObject{
     newGeom(newCentX : number, newCentY : number, newDiam? : number) {
         
         // === YOUR CODE HERE ===
+        //sets the new properties of the object
         this.centerX = newCentX;
         this.centerY = newCentY;
         if (newDiam){
@@ -694,7 +703,7 @@ class Target extends ScreenObject{
     override draw(ctx : CanvasRenderingContext2D) : void {
         
         // === YOUR CODE HERE ===
-        if (this.visible){
+        if (this.visible){ //only draw if the object is set to be visible
             ctx.beginPath();
             ctx.arc(this.centerX, this.centerY, this.diam/2, 0, Math.PI * 2, true);
             ctx.fillStyle = this.color;
@@ -709,9 +718,10 @@ class Target extends ScreenObject{
     override pickedBy(ptX : number, ptY : number) : boolean {
         
         // === YOUR CODE HERE ===
-        if (!this.visible) return false;
+        if (!this.visible) return false; //if not visible we don't need to check
+        //check distance from point to center of the target
         let dist = Math.sqrt((ptX-this.centerX)**2 + (ptY-this.centerY)**2);
-        return dist <= this.radius;
+        return dist <= this.radius; //true if point in the circle
         
         // === REMOVE THE FOLLOWING CODE (which is here so the skeleton code compiles) ===
         // return false;
@@ -726,7 +736,9 @@ class Target extends ScreenObject{
     override handleClickAt(ptX : number, ptY : number) : boolean {
         
         // === YOUR CODE HERE ===
+        //if state is correct, the target is visible, and the point is in bounds
         if (this.parentUI.currentState === 'in_trial' && this.visible && this.pickedBy(ptX, ptY)){
+            //end the trial
             this.parentUI.recordTrialEnd(ptX, ptY, this.diam)
             this.parentUI.newTrial();
             return true;
@@ -781,7 +793,8 @@ class Reticle extends Target {
     override draw(ctx : CanvasRenderingContext2D) : void {
         
         // === YOUR CODE HERE ===\
-        if (this.visible){
+        if (this.visible){ //only draw if visible
+            //draws the reticle
             ctx.beginPath();
             ctx.arc(this.centerX, this.centerY, Reticle.RETICLE_DIAM/2, 0, 2 * Math.PI);
             ctx.lineTo(this.centerX-Reticle.RETICLE_DIAM/2,this.centerY);
@@ -802,9 +815,10 @@ class Reticle extends Target {
     override pickedBy(ptX : number, ptY : number) : boolean {
         
         // === YOUR CODE HERE ===
-        if (!this.visible) return false;
+        if (!this.visible) return false; //only check if reticle is visible
+        //gets distance from point to center of reticle
         let dist = Math.sqrt((ptX-this.centerX)**2 + (ptY-this.centerY)**2);
-        return dist <= Reticle.RETICLE_INNER_DIAM/2;
+        return dist <= Reticle.RETICLE_INNER_DIAM/2; //true if point in inner circle
         
         // === REMOVE THE FOLLOWING CODE (which is here so the skeleton code compiles) ===
         // return false;
@@ -819,7 +833,9 @@ class Reticle extends Target {
     override handleClickAt(ptX : number, ptY : number) : boolean {
         
         // === YOUR CODE HERE ===
+        //if state is correct, reticle is visible, and point is in the inner circle of reticle
         if (this.parentUI.currentState === 'begin_trial' && this.visible && this.pickedBy(ptX, ptY)){
+            //start the trail
             this.parentUI.startTrial(ptX, ptY);
             this.parentUI.configure('in_trial');
             this.parentUI.needsRedraw = true;
@@ -892,6 +908,7 @@ class BackgroundDisplay extends ScreenObject{
         let xpos : number = 10;
 
         // === YOUR CODE HERE ===
+        //writes the text
         ctx.fillText(this._msg1, xpos + leading, ypos);
         ctx.fillText(this._msg2, xpos, ypos + fontHeight);
         ctx.fillText(this._msg3, xpos, ypos + 2*fontHeight);
@@ -905,6 +922,7 @@ class BackgroundDisplay extends ScreenObject{
     override handleClickAt(ptX : number, ptY : number) : boolean {
         
         // === YOUR CODE HERE ===
+        //if state is correct, clicking anywhere starts the new trial
         if (this.parentUI.currentState === 'start'){
             this.parentUI.newTrial();
             return true;
